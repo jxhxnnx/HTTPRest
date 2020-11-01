@@ -72,7 +72,7 @@ namespace HTTPServer
             Byte[] d = new byte[fs.Length];
             reader.Read(d, 0, d.Length);
             fs.Close();
-            return new Response("200 OK", "html/text", d);
+            return new Response("200 OK", "text/html", d);
         }
 
         private static Response MakeNullRequest()
@@ -84,7 +84,7 @@ namespace HTTPServer
             Byte[] d = new byte[fs.Length];
             reader.Read(d, 0, d.Length);
             fs.Close();
-            return new Response("400 Bad Request", "html/text", d);
+            return new Response("400 Bad Request", "text/html", d);
         }
 
         private static Response MakeMethodNotAllowed()
@@ -96,7 +96,7 @@ namespace HTTPServer
             Byte[] d = new byte[fs.Length];
             reader.Read(d, 0, d.Length);
             fs.Close();
-            return new Response("405 Method Not Allowed", "html/text", d);
+            return new Response("405 Method Not Allowed", "text/html", d);
         }
 
         private static Response MakePageNotFound()
@@ -108,14 +108,14 @@ namespace HTTPServer
             Byte[] d = new byte[fs.Length];
             reader.Read(d, 0, d.Length);
             fs.Close();
-            return new Response("404 Page Not Found", "html/text", d);
+            return new Response("404 Page Not Found", "text/html", d);
         }
 
         public void Post(NetworkStream stream)
         {
             StreamWriter writer = new StreamWriter(stream);
-            writer.WriteLine(String.Format("{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n",
-                HTTPServer.VERSION, status, HTTPServer.NAME, mime, data.Length));
+            writer.WriteLine(String.Format("{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n", HTTPServer.VERSION, status, HTTPServer.NAME, mime, data.Length));
+            writer.Flush();
             stream.Write(data, 0, data.Length);
         }
     }
