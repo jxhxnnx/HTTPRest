@@ -9,17 +9,17 @@ namespace HTTPServer
 {
     public class Response
     {
-        public void Post(NetworkStream stream, string message, string status, string contentType)
+        public void Respond(NetworkStream stream, string message, string status, string contentType)
         {
             StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(HTTPServer._version + " " + status);
-            sb.AppendLine("Content-Type: " + contentType);
-            sb.AppendLine("Content-Length: " + Encoding.UTF8.GetBytes(message).Length);
-            sb.AppendLine();
-            sb.AppendLine(message);
-            System.Diagnostics.Debug.WriteLine(sb.ToString());
-            writer.Write(sb.ToString());
+            StringBuilder mystring = new StringBuilder();
+            mystring.AppendLine(HTTPServer._version + " " + status);
+            mystring.AppendLine("Content-Type: " + contentType);
+            mystring.AppendLine("Content-Length: " + Encoding.UTF8.GetBytes(message).Length);
+            mystring.AppendLine();
+            mystring.AppendLine(message);
+            System.Diagnostics.Debug.WriteLine(mystring.ToString());
+            writer.Write(mystring.ToString());
         }
     }
     
