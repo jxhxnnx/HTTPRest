@@ -12,6 +12,7 @@ namespace HTTPServer
     
     public class HTTPServer
     {
+        public const String _version = "HTTP/1.1";
         private bool running = false;
         Dictionary<string, string> messages = new Dictionary<string, string>();
 
@@ -53,59 +54,62 @@ namespace HTTPServer
 
         private void HandleClient(TcpClient client)
         {
+            //Wird verwendet um Message an den Client zu schreiben
+            Response response = new Response();
+            //Wird verwendet um Messages des Clients auszulesen
             StreamReader reader = new StreamReader(client.GetStream());
-
+            //Zwischenspeicher für Messages von und an den Client
             string msg = "";
-            string output = "";
+            //Zwischenspeicher für Messages an die Console
+            string log = "";
+            //Speichert den Status der bei der Response angegeben werden soll
+            string responseStatus = "200";
+            //Message wird aud dem Stream char für char in msg gespeichert
             while (reader.Peek() != -1)
             {
                 msg += (char)reader.Read();
             }
-
-            Debug.WriteLine("Request: \n" + msg);
-
+            //Wird verwendet um die Request des Clients zu Parsen
             Requests request = new Requests(msg);
-            Debug.WriteLine("Method:" + request.Method);
-            Debug.WriteLine("Indentifier:" + request.Identifier);
-            Debug.WriteLine("Command:" + request.Command);
-            Debug.WriteLine("Version:" + request.Version);
-            Debug.WriteLine("ContentType:" + request.ContentType);
-            Debug.WriteLine("ContentLength:" + request.ContentLength);
-            Debug.WriteLine("Payload:" + request.Payload);
-
+            //Funktionalitäten gehören aus der Konsole in eine Response ausgelagert
             if (String.Compare(request.GetMethod(), "GET ") == 0)
             {
                 if (String.Compare(request.Identifier, "all") == 0)
                 {
+                    StringBuilder sb = new StringBuilder();
                     foreach (KeyValuePair<string, string> kvp in messages)
                     {
-                        Console.WriteLine(" {0}: Message = {1}",
-                            kvp.Key, kvp.Value);
+                        sb.AppendLine(kvp.Key + ":\t" + kvp.Value + "\r\n");
                     }
-                    msg = "show all messages";
+                    log = "show all messages";
+                    msg = sb.ToString();
+                    
                 }
                 else
                 {
-                    messages.TryGetValue(request.Identifier, out output);
-                    Console.WriteLine(output);
+                    messages.TryGetValue(request.Identifier, out msg);
+                    log = "show message on position" + request.Identifier;
                     msg = "show message on position" + request.Identifier;
                 }
             }
             else if (String.Compare(request.GetMethod(), "POST ") == 0)
             {
                 messages.TryAdd(request.Identifier, request.Payload);
+                log = "new message added";
                 msg = "new message added";
             }
             else if (String.Compare(request.GetMethod(), "PUT ") == 0)
             {
                 if (String.Compare(request.Identifier, "all") == 0)
                 {
+                    log = "message identifier not found";
                     msg = "message identifier not found";
+                    responseStatus = "400";
                 }
                 else
                 {
-                    messages.Remove(request.Identifier);
                     messages.Add(request.Identifier, request.Payload);
+                    log = "put new message on position " + request.Identifier;
                     msg = "put new message on position " + request.Identifier;
                 }
             }
@@ -113,22 +117,23 @@ namespace HTTPServer
             {
                 if (String.Compare(request.Identifier, "all") == 0)
                 {
+                    log = "message identifier not found";
+                    responseStatus = "400";
                     msg = "message identifier not found";
                 }
                 else
                 {
                     messages.Remove(request.Identifier);
+                    log = "message deleted on position " + request.Identifier;
                     msg = "message deleted on position " + request.Identifier;
                 }
             }
-            Console.WriteLine(msg + " " + request.GetLogEntry());
-            NetworkStream stream = client.GetStream();
-            Response response = new Response(200, request.Version);
-            byte[] messg = Encoding.ASCII.GetBytes(response.StringFormHTTP());
-            stream.Write(messg, 0, messg.Length);
-         
+            response.Post(client.GetStream(), msg, responseStatus, "plain/text");
+
+            Console.WriteLine(log + " " + request.GetLogEntry());
+
         }
 
-        
+
     }
 }
