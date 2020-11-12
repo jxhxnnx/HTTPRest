@@ -15,7 +15,6 @@ namespace HTTPServer
         public const String _version = "HTTP/1.1";
         private bool running = false;
         Dictionary<string, string> messages = new Dictionary<string, string>();
-
         private TcpListener listener;
 
         public HTTPServer(int port)
@@ -25,8 +24,8 @@ namespace HTTPServer
 
         public void Start()
         {
-            Thread serverThread = new Thread(new ThreadStart(Run));
-            serverThread.Start();
+            Thread thread = new Thread(new ThreadStart(Run));
+            thread.Start();
         }
 
         private void Run()
@@ -36,15 +35,10 @@ namespace HTTPServer
 
             while (running)
             {
-                //Eine Connection etablieren und diese halten sntatt immer wieder eine request-based erstellen
-                Console.WriteLine("Waiting for connection..");
-
+                Console.WriteLine("Waiting for connections...");
                 TcpClient client = listener.AcceptTcpClient();
-
-                Console.WriteLine("Client connected!");
-
-                HandleClient(client);
-
+                Console.WriteLine("Client connected successfully!");
+                ClientHandler(client);
                 client.Close();
             }
 
@@ -52,88 +46,80 @@ namespace HTTPServer
             listener.Stop();
         }
 
-        private void HandleClient(TcpClient client)
+        private void ClientHandler(TcpClient client)
         {
-            //Wird verwendet um Message an den Client zu schreiben
             Response response = new Response();
-            //Wird verwendet um Messages des Clients auszulesen
             StreamReader reader = new StreamReader(client.GetStream());
-            //Zwischenspeicher für Messages von und an den Client
-            string msg = "";
-            //Zwischenspeicher für Messages an die Console
-            string log = "";
-            //Speichert den Status der bei der Response angegeben werden soll
-            string responseStatus = "200";
-            //Message wird aud dem Stream char für char in msg gespeichert
+            string clientMsg = "";
+            string consoleMsg = "";
+            string status = "200";
+
             while (reader.Peek() != -1)
             {
-                msg += (char)reader.Read();
+                clientMsg += (char)reader.Read();
             }
-            //Wird verwendet um die Request des Clients zu Parsen
-            Requests request = new Requests(msg);
-            //Funktionalitäten gehören aus der Konsole in eine Response ausgelagert
-            if (String.Compare(request.GetMethod(), "GET ") == 0)
+            Requests request = new Requests(clientMsg);
+
+            if (string.Compare(request.Method, "POST ") == 0)
             {
-                if (String.Compare(request.Identifier, "all") == 0)
+                messages.TryAdd(request.ID, request.Message);
+                consoleMsg = "adding successful";
+                clientMsg = "added successful: " + request.Message;
+            }
+            else if (string.Compare(request.Method, "GET ") == 0)
+            {
+                if (string.Compare(request.ID, "") == 0)
                 {
-                    StringBuilder sb = new StringBuilder();
-                    foreach (KeyValuePair<string, string> kvp in messages)
+                    StringBuilder mystring = new StringBuilder();
+                    foreach (KeyValuePair<string, string> keyValuePair in messages)
                     {
-                        sb.AppendLine(kvp.Key + ":\t" + kvp.Value + "\r\n");
+                        mystring.AppendLine(keyValuePair.Key + ":\t" + keyValuePair.Value + "\r\n");
                     }
-                    log = "show all messages";
-                    msg = sb.ToString();
+                    consoleMsg = "get all messages";
+                    clientMsg = mystring.ToString();
+                }
+                else
+                {
+                    messages.TryGetValue(request.ID, out clientMsg);
+                    consoleMsg = "requested message: " + request.ID;
+                }
+            }
+            else if (string.Compare(request.Method, "PUT ") == 0)
+            {
+                if (string.Compare(request.ID, "") == 0)
+                {
+                    status = "400";
+                    consoleMsg = "not existing message ID requested";
+                    clientMsg = "message ID not existing";
                     
                 }
                 else
                 {
-                    messages.TryGetValue(request.Identifier, out msg);
-                    log = "show message on position" + request.Identifier;
-                    msg = "show message on position" + request.Identifier;
+                    messages.Remove(request.ID);
+                    messages.Add(request.ID, request.Message);
+                    consoleMsg = "changed message #" + request.ID;
+                    clientMsg = "changed message #" + request.ID + ": " + request.Message;
                 }
             }
-            else if (String.Compare(request.GetMethod(), "POST ") == 0)
+            else if (string.Compare(request.Method, "DELETE ") == 0)
             {
-                messages.TryAdd(request.Identifier, request.Payload);
-                log = "new message added";
-                msg = "new message added";
-            }
-            else if (String.Compare(request.GetMethod(), "PUT ") == 0)
-            {
-                if (String.Compare(request.Identifier, "all") == 0)
+                if (string.Compare(request.ID, "") == 0)
                 {
-                    log = "message identifier not found";
-                    msg = "message identifier not found";
-                    responseStatus = "400";
+                    status = "400";
+                    consoleMsg = "not existing message ID requested";
+                    clientMsg = "message ID not existing";
                 }
                 else
                 {
-                    messages.Add(request.Identifier, request.Payload);
-                    log = "put new message on position " + request.Identifier;
-                    msg = "put new message on position " + request.Identifier;
+                    messages.Remove(request.ID);
+                    consoleMsg = "deleted message #" + request.ID;
+                    clientMsg = "deleted message #" + request.ID;
                 }
             }
-            else if (String.Compare(request.GetMethod(), "DELETE ") == 0)
-            {
-                if (String.Compare(request.Identifier, "all") == 0)
-                {
-                    log = "message identifier not found";
-                    responseStatus = "400";
-                    msg = "message identifier not found";
-                }
-                else
-                {
-                    messages.Remove(request.Identifier);
-                    log = "message deleted on position " + request.Identifier;
-                    msg = "message deleted on position " + request.Identifier;
-                }
-            }
-            response.Post(client.GetStream(), msg, responseStatus, "plain/text");
 
-            Console.WriteLine(log + " " + request.GetLogEntry());
+            response.Post(client.GetStream(), clientMsg, status, "plain/text");
 
+            Console.WriteLine(consoleMsg + " " + request.ExtractLog());
         }
-
-
     }
 }

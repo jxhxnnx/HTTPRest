@@ -10,81 +10,47 @@ namespace HTTPServer
 {
     public class Requests
     {
-        public string Method;
-        public string Command;
-        public string Identifier;
         public string Version;
         public string ContentType;
         public string ContentLength;
-        public string Payload;
+        public string Method { get; }
+        public string Command;
+        public string ID;
+        public string Message;
 
-        /*Später Split mit Substrings verbessern*/
-        /*String gehören noch getrimmt
-         z.B. "GET " zu "GET"*/
         public Requests(string _request)
         {
-            string[] lines = _request.Split("\r\n");
-            string[] firstline = lines[0].Split("/");
-            Method = firstline[0];
-            Command = firstline[1];
-            Version = firstline[3];
+            string[] line = _request.Split("\r\n");
+            string[] insideLine = line[0].Split("/");
+            Method = insideLine[0];
+            Command = insideLine[1];
+            string[] id = insideLine[2].Split(" ");
+            Version = insideLine[3];
 
-
-            string[] identifier = firstline[2].Split(" ");
-            Debug.WriteLine("*" + identifier[0] + "*");
-
-            if (string.IsNullOrEmpty(identifier[0]) || String.Compare(identifier[0], "all ") == 0)
+            if (!string.IsNullOrEmpty(id[0]))
             {
-                Identifier = "all";
+                ID = id[0];
             }
             else
             {
-                Identifier = identifier[0];
+                ID = "";
             }
-            /*
-              int i = 1;
-              foreach (var line in lines)
-              {
-                  string[] pairs = line.Split(":");
-                  Console.WriteLine(line + ": " + i);
-                  i++;
-              }
-            */
-            foreach (var line in lines)
+
+            foreach (var item in line)
             {
-                string[] pairs = line.Split(":");
-                if (String.Compare(pairs[0], "Content-Type") == 0)
+                string[] typeLength = item.Split(":");
+                if (String.Compare(typeLength[0], "Content-Type") == 0)
                 {
-                    ContentType = pairs[1];
+                    ContentType = typeLength[1];
                 }
-                if (String.Compare(pairs[0], "Content-Length") == 0)
+                if (String.Compare(typeLength[0], "Content-Length") == 0)
                 {
-                    ContentLength = pairs[1];
+                    ContentLength = typeLength[1];
                 }
             }
-
-            Payload = GetRequestMessage(_request);
+            Message = ExtractMessage(_request);
         }
-
-        //Das geht irgendwie anders, keine Ahnung. bin c++ gwohnt
-        public string GetMethod()
-        {
-            return Method;
-        }
-        public string GetMethodFromRequest(string _request)
-        {
-            if (string.IsNullOrEmpty(_request))
-            {
-                return null;
-            }
-
-            string method = "";
-            string[] tokens = _request.Split("/");
-            method = tokens[0];
-            return method;
-        }
-
-        private static string GetRequestMessage(string request)
+        private static string ExtractMessage(string request)
         {
             if (string.IsNullOrEmpty(request))
             {
@@ -94,12 +60,11 @@ namespace HTTPServer
             string message = tokens[1];
             return message;
         }
-
-        public string GetLogEntry()
+        public string ExtractLog()
         {
 
-            string logEntry = Method + " /" + Command + "/" + Identifier;
-            return logEntry;
+            string log = Method + " /" + Command + "/" + ID;
+            return log;
         }
     }
 }

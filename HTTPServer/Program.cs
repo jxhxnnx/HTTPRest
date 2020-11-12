@@ -9,7 +9,7 @@ namespace HTTPServer
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting server on port 8080!");
+            Console.WriteLine("Welcome to Johanna's Server on Port 8080 :)");
             HTTPServer server = new HTTPServer(8080);
             server.Start();
         }
