@@ -9,114 +9,103 @@ namespace HTTPServer
 {
     public class Response
     {
-        private Byte[] data = null;
-        private String status;
-        private String mime;
+        public int Status { get; }
+        public string Version { get; }
+        public Dictionary<string, string> HeaderVal { get; }
+        public string Body { get; }
 
-
-        private Response(String status, String mime, Byte[] data)
+        public Response(int status, string version)
         {
-            this.status = status;
-            this.mime = mime;
-            this.data = data;
+            Status = status;
+            Version = version;
+            HeaderVal = new Dictionary<string, string>();
+            Body = "";
         }
-
-        public static Response From(Requests request)
+        /*public Response(int status, HTTPVersion version, Dictionary<string, string> headerVal)
         {
-            if(request == null)
-            {
-                return MakeNullRequest();
-            }
-            if(request.Type == "GET")
-            {
-                String file = Environment.CurrentDirectory + HTTPServer.WEB_DIR + request.URL;
-                FileInfo f = new FileInfo(file);
-                if(f.Exists && f.Extension.Contains("."))
-                {
-                    return MakeFromFile(f);
-                }
-                else
-                {
-                    DirectoryInfo di = new DirectoryInfo(f+ "/");
-                    if(!di.Exists)
-                    {
-                        return MakePageNotFound();
-                    }
-                    FileInfo[] files = di.GetFiles();
-                    foreach(FileInfo ff in files)
-                    {
-                        String n = ff.Name;
-                        if(n.Contains("default.html") || n.Contains("default.htm") || n.Contains("index.htm") || n.Contains("index.html"))
-                        {
-                            return MakeFromFile(ff);
-                        }
-                    }
-                }
+            Status = status;
+            Version = version;
+            HeaderVal = headerVal;
+            Body = "";
+        }
+        public Response(int status, string version, Dictionary<string, string> headerVal, string body)
+        {
+            Status = status;
+            Version = version;
+            HeaderVal = headerVal;
+            Body = body;
+        }*/
 
-                if(!f.Exists)
-                {
-                    return MakePageNotFound();
-                }
+        public string StringFormHTTP()
+        {
+            StringBuilder mystring = new StringBuilder();
+            if (String.Compare(Version, "1.0") == 0)
+            {
+                mystring.Append("HTTP/1.0");
+            }
+            else if (String.Compare(Version, "1.1") == 0)
+            {
+                mystring.Append("HTTP/1.1");
+            }
+            else if (String.Compare(Version, "2.0") == 0)
+            {
+                mystring.Append("HTTP/2.0");
+            }
+            else if (String.Compare(Version, "3.0") == 0)
+            {
+                mystring.Append("HTTP/3.0");
+            }
+            else throw new Exception("no version");
+
+            mystring.Append(" ");
+            mystring.Append(Status);
+            mystring.Append(" ");
+
+            if (Status == 200)
+            {
+                mystring.Append("OK");
+            }
+            else if (Status == 400)
+            {
+                mystring.Append("Bad Request");
+            }
+            else if (Status == 404)
+            {
+                mystring.Append("Not Found");
+            }
+            else if (Status == 405)
+            {
+                mystring.Append("Method Not Allowed");
+            }
+            mystring.Append("\r\n");
+
+
+            return mystring.ToString();
+        }
+        public override string ToString()
+        {
+            StringBuilder mystring = new StringBuilder();
+            mystring.AppendLine("Response info:");
+            mystring.AppendLine("\tHTTP Version: " +  Version);
+            mystring.AppendLine("\tHTTP Status: " + Status);
+            mystring.AppendLine("\tHeader Values (" + HeaderVal.Count + "):");
+            foreach (var value in HeaderVal)
+            {
+                mystring.AppendLine("\t\t" + value.Key + " => " + value.Value);
+            }
+            if (Body.Length < 1)
+            {
+                mystring.Append("\tNo Body");
+            }
+            else if (Body.Length < 64)
+            {
+                mystring.Append("\tBody (" + Body.Length + "): " + Body);
             }
             else
             {
-                return MakeMethodNotAllowed();
+                mystring.Append("\tBody (" + Body.Length + "): " + Body.Substring(0, 49) + " [...truncated]");
             }
-            return MakePageNotFound();
-        }
-
-        private static Response MakeFromFile(FileInfo f)
-        {
-            FileStream fs = f.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            Byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("200 OK", "text/html", d);
-        }
-
-        private static Response MakeNullRequest()
-        {
-            String file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "400.html";
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            Byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("400 Bad Request", "text/html", d);
-        }
-
-        private static Response MakeMethodNotAllowed()
-        {
-            String file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "405.html";
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            Byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("405 Method Not Allowed", "text/html", d);
-        }
-
-        private static Response MakePageNotFound()
-        {
-            String file = Environment.CurrentDirectory + HTTPServer.MSG_DIR + "404.html";
-            FileInfo fi = new FileInfo(file);
-            FileStream fs = fi.OpenRead();
-            BinaryReader reader = new BinaryReader(fs);
-            Byte[] d = new byte[fs.Length];
-            reader.Read(d, 0, d.Length);
-            fs.Close();
-            return new Response("404 Page Not Found", "text/html", d);
-        }
-
-        public void Post(NetworkStream stream)
-        {
-            StreamWriter writer = new StreamWriter(stream);
-            writer.WriteLine(String.Format("{0} {1}\r\nServer: {2}\r\nContent-Type: {3}\r\nAccept-Ranges: bytes\r\nContent-Length: {4}\r\n", HTTPServer.VERSION, status, HTTPServer.NAME, mime, data.Length));
-            writer.Flush();
-            stream.Write(data, 0, data.Length);
+            return mystring.ToString();
         }
     }
 }
