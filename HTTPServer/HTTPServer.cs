@@ -62,11 +62,11 @@ namespace HTTPServer
 
             if (string.Compare(request.Method, "POST ") == 0)
             {
-                if(string.Compare(request.ID, "") == 0)
+                if(string.Compare(request.ID, "") == 0 || !IDisDigit(request.ID))
                 {
                     status = "400";
-                    consoleMsg = "no ID";
-                    clientMsg = "no ID";
+                    consoleMsg = "no valid ID";
+                    clientMsg = "no valid ID";
                 }
                 else if(!messages.ContainsKey(request.ID))
                 {
@@ -78,9 +78,9 @@ namespace HTTPServer
                 { 
                     status = "400";
                     consoleMsg = "message #" + request.ID + "allready in use";
-                    string existingMessage;
-                    messages.TryGetValue(request.ID, out existingMessage);
-                    clientMsg = "message #" + request.ID + " allready in use: " + existingMessage;
+                    string msgWithRequestedID;
+                    messages.TryGetValue(request.ID, out msgWithRequestedID);
+                    clientMsg = "message #" + request.ID + " allready in use: " + msgWithRequestedID;
                 }
                 
             }
@@ -95,6 +95,12 @@ namespace HTTPServer
                     }
                     consoleMsg = "get all messages";
                     clientMsg = mystring.ToString();
+                }
+                else if (!IDisDigit(request.ID))
+                {
+                    status = "400";
+                    consoleMsg = "no valid ID";
+                    clientMsg = "no valid ID";
                 }
                 else if(messages.ContainsKey(request.ID))
                 {
@@ -114,6 +120,12 @@ namespace HTTPServer
                     status = "400";
                     consoleMsg = "not existing message ID requested";
                     clientMsg = "message ID not existing"; 
+                }
+                else if (!IDisDigit(request.ID))
+                {
+                    status = "400";
+                    consoleMsg = "no valid ID";
+                    clientMsg = "no valid ID";
                 }
                 else
                 {
@@ -141,6 +153,12 @@ namespace HTTPServer
                     consoleMsg = "not existing message ID requested";
                     clientMsg = "message ID not existing";
                 }
+                else if (!IDisDigit(request.ID))
+                {
+                    status = "400";
+                    consoleMsg = "no valid ID";
+                    clientMsg = "no valid ID";
+                }
                 else if(messages.ContainsKey(request.ID))
                 {
                     messages.Remove(request.ID);
@@ -158,6 +176,18 @@ namespace HTTPServer
             response.Respond(client.GetStream(), clientMsg, status, "plain/text");
 
             Console.WriteLine(consoleMsg + " " + request.ExtractLog());
+        }
+
+        bool IDisDigit(string ID)
+        {
+            for(int i = 0; i < ID.Length; i++)
+            {
+                if(!Char.IsNumber(ID[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
