@@ -62,9 +62,18 @@ namespace HTTPServer
 
             if (string.Compare(request.Method, "POST ") == 0)
             {
-                messages.TryAdd(request.ID, request.Message);
-                consoleMsg = "adding successful";
-                clientMsg = "added successful: " + request.Message;
+                if(string.Compare(request.ID, "") == 0)
+                {
+                    consoleMsg = "no ID";
+                    clientMsg = "no ID";
+                }
+                else
+                {
+                    messages.TryAdd(request.ID, request.Message);
+                    consoleMsg = "adding successful";
+                    clientMsg = "added successful: " + request.Message + " at #" + request.ID;
+                }
+                
             }
             else if (string.Compare(request.Method, "GET ") == 0)
             {
@@ -73,15 +82,19 @@ namespace HTTPServer
                     StringBuilder mystring = new StringBuilder();
                     foreach (KeyValuePair<string, string> keyValuePair in messages)
                     {
-                        mystring.AppendLine(keyValuePair.Key + ":\t" + keyValuePair.Value + "\r\n");
+                        mystring.AppendLine(keyValuePair.Key + ":\t" + keyValuePair.Value);
                     }
                     consoleMsg = "get all messages";
                     clientMsg = mystring.ToString();
                 }
-                else
+                else if(messages.ContainsKey(request.ID))
                 {
                     messages.TryGetValue(request.ID, out clientMsg);
-                    consoleMsg = "requested message: " + request.ID;
+                    consoleMsg = "requested message #" + request.ID;
+                }
+                else
+                {
+                    consoleMsg = "no message #" + request.ID;
                 }
             }
             else if (string.Compare(request.Method, "PUT ") == 0)
@@ -90,15 +103,24 @@ namespace HTTPServer
                 {
                     status = "400";
                     consoleMsg = "not existing message ID requested";
-                    clientMsg = "message ID not existing";
-                    
+                    clientMsg = "message ID not existing"; 
                 }
                 else
                 {
-                    messages.Remove(request.ID);
-                    messages.Add(request.ID, request.Message);
-                    consoleMsg = "changed message #" + request.ID;
-                    clientMsg = "changed message #" + request.ID + ": " + request.Message;
+                    if(messages.ContainsKey(request.ID))
+                    {
+                        messages.Remove(request.ID);
+                        messages.Add(request.ID, request.Message);
+                        consoleMsg = "changed message #" + request.ID + " to " + request.Message;
+                        clientMsg = "changed message #" + request.ID + ": " + request.Message;
+                    }
+                    else
+                    {
+                        messages.Add(request.ID, request.Message);
+                        consoleMsg = "new message #" + request.ID + " : " + request.Message;
+                        clientMsg = "new message #" + request.ID + ": " + request.Message;
+                    }
+                    
                 }
             }
             else if (string.Compare(request.Method, "DELETE ") == 0)
@@ -109,15 +131,20 @@ namespace HTTPServer
                     consoleMsg = "not existing message ID requested";
                     clientMsg = "message ID not existing";
                 }
-                else
+                else if(messages.ContainsKey(request.ID))
                 {
                     messages.Remove(request.ID);
                     consoleMsg = "deleted message #" + request.ID;
                     clientMsg = "deleted message #" + request.ID;
                 }
+                else
+                {
+                    consoleMsg = "no message with #" + request.ID;
+                    clientMsg = "no message with #" + request.ID;
+                }
             }
 
-            response.Post(client.GetStream(), clientMsg, status, "plain/text");
+            response.Respond(client.GetStream(), clientMsg, status, "plain/text");
 
             Console.WriteLine(consoleMsg + " " + request.ExtractLog());
         }
