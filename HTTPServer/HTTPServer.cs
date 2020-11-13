@@ -64,14 +64,23 @@ namespace HTTPServer
             {
                 if(string.Compare(request.ID, "") == 0)
                 {
+                    status = "400";
                     consoleMsg = "no ID";
                     clientMsg = "no ID";
                 }
-                else
+                else if(!messages.ContainsKey(request.ID))
                 {
-                    messages.TryAdd(request.ID, request.Message);
-                    consoleMsg = "adding successful";
-                    clientMsg = "added successful: " + request.Message + " at #" + request.ID;
+                    messages.Add(request.ID, request.Message);
+                    consoleMsg = "added successfully";
+                    clientMsg = "added successfully: " + request.Message + " at #" + request.ID;
+                } 
+                else
+                { 
+                    status = "400";
+                    consoleMsg = "message #" + request.ID + "allready in use";
+                    string existingMessage;
+                    messages.TryGetValue(request.ID, out existingMessage);
+                    clientMsg = "message #" + request.ID + " allready in use: " + existingMessage;
                 }
                 
             }
@@ -82,7 +91,7 @@ namespace HTTPServer
                     StringBuilder mystring = new StringBuilder();
                     foreach (KeyValuePair<string, string> keyValuePair in messages)
                     {
-                        mystring.AppendLine(keyValuePair.Key + ":\t" + keyValuePair.Value);
+                        mystring.AppendLine("#" + keyValuePair.Key + "\t" + keyValuePair.Value);
                     }
                     consoleMsg = "get all messages";
                     clientMsg = mystring.ToString();
@@ -94,6 +103,7 @@ namespace HTTPServer
                 }
                 else
                 {
+                    status = "400";
                     consoleMsg = "no message #" + request.ID;
                 }
             }
@@ -139,6 +149,7 @@ namespace HTTPServer
                 }
                 else
                 {
+                    status = "400";
                     consoleMsg = "no message with #" + request.ID;
                     clientMsg = "no message with #" + request.ID;
                 }
