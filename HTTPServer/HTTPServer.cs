@@ -45,7 +45,7 @@ namespace HTTPServer
             running = false;
             listener.Stop();
         }
-        bool IDisValid(string ID)
+        public bool IDisValid(string ID)
         {
             for (int i = 0; i < ID.Length; i++)
             {
@@ -56,7 +56,7 @@ namespace HTTPServer
             }
             return true;
         }
-        private void ClientHandler(TcpClient client)
+        public void ClientHandler(TcpClient client)
         {
             Response response = new Response();
             StreamReader reader = new StreamReader(client.GetStream());
@@ -68,6 +68,7 @@ namespace HTTPServer
             {
                 clientMsg += (char)reader.Read();
             }
+            Console.WriteLine(clientMsg);
             Requests request = new Requests(clientMsg);
 
             if (string.Compare(request.Method, "POST ") == 0)

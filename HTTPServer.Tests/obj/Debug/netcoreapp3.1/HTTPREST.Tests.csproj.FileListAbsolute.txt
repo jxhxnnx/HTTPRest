@@ -1,0 +1,4 @@
+C:\Users\Lenovo\source\repos\HTTPServer\HTTPREST.Tests\bin\Debug\netcoreapp3.1\HTTPREST.Tests.exe
+C:\Users\Lenovo\source\repos\HTTPServer\HTTPREST.Tests\obj\Debug\netcoreapp3.1\HTTPREST.Tests.csprojAssemblyReference.cache
+C:\Users\Lenovo\source\repos\HTTPServer\HTTPREST.Tests\obj\Debug\netcoreapp3.1\HTTPREST.Tests.AssemblyInfoInputs.cache
+C:\Users\Lenovo\source\repos\HTTPServer\HTTPREST.Tests\obj\Debug\netcoreapp3.1\HTTPREST.Tests.AssemblyInfo.cs

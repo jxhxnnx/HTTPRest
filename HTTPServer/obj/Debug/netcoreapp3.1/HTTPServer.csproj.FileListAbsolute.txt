@@ -7,7 +7,7 @@ C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\bin\Debug\netcoreapp3.1\HTTPS
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.csprojAssemblyReference.cache
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.AssemblyInfoInputs.cache
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.AssemblyInfo.cs
-C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.csproj.CoreCompileInputs.cache
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.dll
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.pdb
 C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.genruntimeconfig.cache
+C:\Users\Lenovo\source\repos\HTTPServer\HTTPServer\obj\Debug\netcoreapp3.1\HTTPServer.csproj.CoreCompileInputs.cache
